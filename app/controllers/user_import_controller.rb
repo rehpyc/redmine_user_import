@@ -14,12 +14,12 @@ class UserImportController < ApplicationController
     # params
     file = params[:file]
     splitter = params[:splitter]
-    wrapper = params[:wrapper]
+    wrapper  = params[:wrapper ]
     encoding = params[:encoding]
 
     @samples = []
     @headers = []
-    @attrs = []
+    @attrs   = []
 
     # save import file
     @original_filename = file.original_filename
@@ -37,9 +37,9 @@ class UserImportController < ApplicationController
       return
     end
 
-    session[:importer_tmpfile] = tmpfilename
+    session[:importer_tmpfile ] = tmpfilename
     session[:importer_splitter] = splitter
-    session[:importer_wrapper] = wrapper
+    session[:importer_wrapper ] = wrapper
     session[:importer_encoding] = encoding
 
     # display content
@@ -64,10 +64,10 @@ class UserImportController < ApplicationController
   end
 
   def result
-    tmpfilename = session[:importer_tmpfile]
-    splitter = session[:importer_splitter]
-    wrapper = session[:importer_wrapper]
-    encoding = session[:importer_encoding]
+    tmpfilename = session[:importer_tmpfile ]
+    splitter    = session[:importer_splitter]
+    wrapper     = session[:importer_wrapper ]
+    encoding    = session[:importer_encoding]
 
     if tmpfilename
       tmpfile = $tmpfiles[tmpfilename]
@@ -78,25 +78,22 @@ class UserImportController < ApplicationController
     end
 
     # CSV fields map
-    fields_map = params[:fields_map]
-    # DB attr map
-    attrs_map = fields_map.invert
-
+    fields_map    = params[:fields_map]
     @handle_count = 0
     @failed_count = 0
-    @failed_rows = Hash.new
+    @failed_rows  = Hash.new
 
     CSV.foreach(tmpfile.path, {:headers=>true, :encoding=>encoding, :quote_char=>wrapper, :col_sep=>splitter}) do |row|
-      user = User.find_by_login(row[attrs_map["login"]])
+      user = User.find_by_login(row[fields_map[:login]])
       unless user
         user = User.new(:status => 1, :mail_notification => 0, :language => Setting.default_language)
-        user.login = row[attrs_map["login"]]
-        user.password = row[attrs_map["password"]]
-        user.password_confirmation = row[attrs_map["password"]]
-        user.lastname = row[attrs_map["lastname"]]
-        user.firstname = row[attrs_map["firstname"]]
-        user.mail = row[attrs_map["mail"]]
-        user.admin = row[attrs_map["admin"]]
+        user.login                 = row[fields_map[:login    ]]
+        user.password              = row[fields_map[:password ]]
+        user.password_confirmation = row[fields_map[:password ]]
+        user.lastname              = row[fields_map[:lastname ]]
+        user.firstname             = row[fields_map[:firstname]]
+        user.mail                  = row[fields_map[:mail     ]]
+        user.admin                 = row[fields_map[:admin    ]]
       else
         flash.now[:warning] = l(:message_unique_filed_duplicated)
         @failed_count += 1
